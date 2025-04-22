@@ -2,6 +2,8 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { DynamicContextProvider } from '@dynamic-labs/sdk-react-core';
+import { SuiWalletConnectors } from '@dynamic-labs/sui';
 
 import './globals.css';
 
@@ -70,15 +72,22 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+        <DynamicContextProvider
+          settings={{
+            environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || '',
+            walletConnectors: [SuiWalletConnectors],
+          }}
         >
-          <Toaster position="top-center" />
-          {children}
-        </ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Toaster position="top-center" />
+            {children}
+          </ThemeProvider>
+        </DynamicContextProvider>
       </body>
     </html>
   );
