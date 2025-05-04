@@ -2,10 +2,13 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-import { DynamicContextProvider } from '@dynamic-labs/sdk-react-core';
-import { SuiWalletConnectors } from '@dynamic-labs/sui';
 
 import './globals.css';
+import DynamicWrapper from '@/components/provider/dynamic-wrapper';
+import { SessionProvider } from 'next-auth/react';
+import { auth } from './(auth)/auth';
+import { TopBar } from '@/components/top-bar';
+import { InteractiveDock } from '@/components/dock';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
@@ -72,22 +75,23 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <DynamicContextProvider
-          settings={{
-            environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || '',
-            walletConnectors: [SuiWalletConnectors],
-          }}
-        >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Toaster position="top-center" />
-            {children}
-          </ThemeProvider>
-        </DynamicContextProvider>
+        <DynamicWrapper>
+          <SessionProvider session={await auth()}>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <TopBar />
+              <main className="min-h-screen">{children}</main>
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+                <InteractiveDock />
+              </div>
+              <Toaster position="top-center" />
+            </ThemeProvider>
+          </SessionProvider>
+        </DynamicWrapper>
       </body>
     </html>
   );

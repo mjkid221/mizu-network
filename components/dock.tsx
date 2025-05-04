@@ -93,7 +93,7 @@ const DATA = {
   },
 };
 
-export const DockDemo = forwardRef<
+export const InteractiveDock = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >((props, ref) => {
@@ -159,4 +159,4 @@ export const DockDemo = forwardRef<
   );
 });
 
-DockDemo.displayName = 'DockDemo';
+InteractiveDock.displayName = 'InteractiveDock';

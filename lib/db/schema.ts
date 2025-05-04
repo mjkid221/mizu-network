@@ -13,11 +13,37 @@ import {
 
 export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
+  dynamicId: varchar('dynamicId').notNull().unique(),
+  earlyAccess: boolean('earlyAccess').notNull().default(false),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  referralCode: varchar('referralCode').notNull().unique(),
+  referringUserId: varchar('referringUserId'),
 });
 
 export type User = InferSelectModel<typeof user>;
+
+export const wallet = pgTable('Wallet', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  publicKey: text('publicKey').notNull(),
+  encryptedPrivateKey: text('encryptedPrivateKey').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  chain: varchar('chain', { enum: ['sui'] })
+    .notNull()
+    .default('sui'),
+});
+
+export type Wallet = InferSelectModel<typeof wallet>;
 
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
