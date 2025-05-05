@@ -32,13 +32,18 @@ pids=()
 MAX_CONCURRENT=5
 current_running=0
 
-while IFS='=' read -r key value
-do
+# Read the file and ensure we catch the last line even without newline
+while IFS= read -r line || [ -n "$line" ]; do
     # Skip empty lines and comments
-    if [[ -n "$key" && ! "$key" =~ ^# ]]; then
-        # Remove any leading/trailing whitespace
-        key=$(echo "$key" | xargs)
-        value=$(echo "$value" | xargs)
+    if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+        # Split the line into key and value
+        key=$(echo "$line" | cut -d '=' -f1 | xargs)
+        value=$(echo "$line" | cut -d '=' -f2- | xargs)
+        
+        # Skip if key is empty
+        if [ -z "$key" ]; then
+            continue
+        fi
         
         # Wait if we've reached max concurrent processes
         if [ $current_running -ge $MAX_CONCURRENT ]; then
