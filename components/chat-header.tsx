@@ -48,7 +48,7 @@ function PureChatHeader({
               <span className="md:sr-only">New Chat</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent side="bottom">New Chat</TooltipContent>
         </Tooltip>
       )}
 

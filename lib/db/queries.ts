@@ -1,6 +1,5 @@
 import 'server-only';
 
-import { genSaltSync, hashSync } from 'bcrypt-ts';
 import {
   and,
   asc,
@@ -12,8 +11,6 @@ import {
   lt,
   type SQL,
 } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 
 import {
   user,
@@ -26,32 +23,77 @@ import {
   vote,
   type DBMessage,
   type Chat,
+  wallet,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
+import db from './client';
+import { generateReferralCode } from '../utils/unique-id-generator';
+import { cookies } from 'next/headers';
+import { generateEncryptedKeyPair } from '../sui/wallet-generator';
+import { retry } from '../utils/retry';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
-
-export async function getUser(email: string): Promise<Array<User>> {
+export async function getUser(dynamicId: string): Promise<Array<User>> {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    return await db.select().from(user).where(eq(user.dynamicId, dynamicId));
   } catch (error) {
     console.error('Failed to get user from database');
     throw error;
   }
 }
 
-export async function createUser(email: string, password: string) {
-  const salt = genSaltSync(10);
-  const hash = hashSync(password, salt);
-
+export async function createUser({ dynamicId }: { dynamicId: string }) {
   try {
-    return await db.insert(user).values({ email, password: hash });
+    const cookieReferralCode = (await cookies()).get('referralCode')?.value;
+    let referringUserId: string | null = null;
+    if (cookieReferralCode) {
+      const [referringUser] = await db
+        .select()
+        .from(user)
+        .where(eq(user.referralCode, cookieReferralCode));
+      if (referringUser) {
+        referringUserId = referringUser.id;
+      }
+    }
+    const createdAt = new Date();
+    const { publicKey, encryptedPrivateKey } = await generateEncryptedKeyPair();
+    const referralCode = await generateReferralCode();
+    const newUser = await retry(
+      async () =>
+        db
+          .insert(user)
+          .values({
+            dynamicId,
+            referralCode,
+            createdAt,
+            updatedAt: createdAt,
+            referringUserId,
+          })
+          .returning(),
+      {
+        retries: 3,
+        delay: 1000,
+      },
+    );
+
+    await retry(
+      async () =>
+        db.insert(wallet).values({
+          userId: newUser[0].id,
+          publicKey,
+          encryptedPrivateKey,
+          chain: 'sui',
+        }),
+      {
+        retries: 3,
+        delay: 1000,
+      },
+    );
+
+    return newUser;
   } catch (error) {
     console.error('Failed to create user in database');
     throw error;

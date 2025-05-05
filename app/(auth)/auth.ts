@@ -1,13 +1,17 @@
-import { compare } from 'bcrypt-ts';
-import NextAuth, { type User, type Session } from 'next-auth';
+import NextAuth, { type User, type Session, type Profile } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import Credentials from 'next-auth/providers/credentials';
 
-import { getUser } from '@/lib/db/queries';
-
 import { authConfig } from './auth.config';
+import { validateJWT } from '@/lib/auth/validate';
+import { createUser, getUser } from '@/lib/db/queries';
+
+interface ExtendedUser extends User {
+  sub?: string;
+}
 
 interface ExtendedSession extends Session {
-  user: User;
+  user: ExtendedUser;
 }
 
 export const {
@@ -19,23 +23,83 @@ export const {
   ...authConfig,
   providers: [
     Credentials({
-      credentials: {},
-      async authorize({ email, password }: any) {
-        const users = await getUser(email);
-        if (users.length === 0) return null;
-        // biome-ignore lint: Forbidden non-null assertion.
-        const passwordsMatch = await compare(password, users[0].password!);
-        if (!passwordsMatch) return null;
-        return users[0] as any;
+      credentials: {
+        token: { label: 'Token', type: 'text' },
+      },
+      async authorize(
+        credentials: Partial<Record<'token', unknown>>,
+      ): Promise<ExtendedUser | null> {
+        try {
+          const token = credentials.token as string;
+          if (typeof token !== 'string' || !token) {
+            throw new Error('Token is required');
+          }
+          const jwtPayload = await validateJWT(token);
+
+          if (!jwtPayload?.sub) {
+            return null;
+          }
+          return {
+            sub: jwtPayload.sub,
+            email: jwtPayload.email,
+            name:
+              jwtPayload.email ??
+              jwtPayload.verified_credentials.find(
+                (c: { address?: string }) => !!c.address,
+              )?.address,
+          };
+        } catch (error) {
+          console.error('Authorization error:', error);
+          return null;
+        }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    ...authConfig.callbacks,
+    async signIn({
+      user,
+    }: {
+      user: ExtendedUser;
+    }) {
+      try {
+        if (!user?.sub) {
+          throw new Error('Missing sub in user data');
+        }
+
+        // Check if user exists
+        const [existingUser] = await getUser(user.sub);
+
+        if (existingUser) {
+          user.id = existingUser.id;
+          return true;
+        }
+
+        // Create new user if they don't exist
+        const [createdUser] = await createUser({
+          dynamicId: user.sub,
+        });
+
+        // Update user object with new database info
+        user.id = createdUser.id;
+        return true;
+      } catch (error) {
+        console.error('Sign in error:', error);
+        return false;
+      }
+    },
+    async jwt({
+      token,
+      user,
+    }: {
+      token: JWT;
+      user?: ExtendedUser;
+      profile?: Profile;
+    }) {
       if (user) {
         token.id = user.id;
+        token.sub = user.sub;
       }
-
       return token;
     },
     async session({
@@ -43,12 +107,12 @@ export const {
       token,
     }: {
       session: ExtendedSession;
-      token: any;
+      token: JWT;
     }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.sub = token.sub as string;
       }
-
       return session;
     },
   },
