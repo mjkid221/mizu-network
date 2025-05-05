@@ -19,9 +19,10 @@ export const ModeToggle = React.forwardRef<
       variant="ghost"
       type="button"
       size="icon"
-      className={cn('px-2', className)}
+      className={cn('px-2 relative z-50', className)}
       aria-label="Toggle theme"
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         console.log('clicked');
         setTheme(theme === 'dark' ? 'light' : 'dark');
       }}

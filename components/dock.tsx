@@ -147,7 +147,9 @@ export const InteractiveDock = forwardRef<
         <DockIcon>
           <Tooltip>
             <TooltipTrigger asChild>
-              <ModeToggle className="rounded-full" />
+              <span>
+                <ModeToggle className="rounded-full" />
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               <p>Theme</p>
