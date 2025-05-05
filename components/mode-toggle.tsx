@@ -2,12 +2,12 @@
 
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { useTheme } from 'next-themes';
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export const ModeToggle = React.forwardRef<
+export const ModeToggle = forwardRef<
   HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof Button> & { className?: string }
 >(({ className, ...props }, ref) => {

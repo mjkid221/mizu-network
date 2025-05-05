@@ -97,6 +97,7 @@
     "@playwright/test": "^1.50.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/d3-scale": "^4.0.8",
+    "@types/diff-match-patch": "^1.0.36",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.8.6",
     "@types/papaparse": "^5.3.15",
