@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { env } from '@/env.mjs';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';

@@ -84,7 +84,7 @@ export default async function RootLayout({
               disableTransitionOnChange
             >
               <TopBar />
-              <main className="min-h-screen">{children}</main>
+              <main className="flex flex-col">{children}</main>
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
                 <InteractiveDock />
               </div>

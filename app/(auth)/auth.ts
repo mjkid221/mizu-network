@@ -1,8 +1,4 @@
-import NextAuth, {
-  type User as NextAuthUser,
-  type Session,
-  type Profile,
-} from 'next-auth';
+import NextAuth, { type User, type Session, type Profile } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import Credentials from 'next-auth/providers/credentials';
 
@@ -10,8 +6,12 @@ import { authConfig } from './auth.config';
 import { validateJWT } from '@/lib/auth/validate';
 import { createUser, getUser } from '@/lib/db/queries';
 
-interface User extends NextAuthUser {
+interface ExtendedUser extends User {
   sub?: string;
+}
+
+interface ExtendedSession extends Session {
+  user: ExtendedUser;
 }
 
 export const {
@@ -28,7 +28,7 @@ export const {
       },
       async authorize(
         credentials: Partial<Record<'token', unknown>>,
-      ): Promise<User | null> {
+      ): Promise<ExtendedUser | null> {
         try {
           const token = credentials.token as string;
           if (typeof token !== 'string' || !token) {
@@ -60,7 +60,7 @@ export const {
     async signIn({
       user,
     }: {
-      user: User;
+      user: ExtendedUser;
     }) {
       try {
         if (!user?.sub) {
@@ -93,7 +93,7 @@ export const {
       user,
     }: {
       token: JWT;
-      user?: User;
+      user?: ExtendedUser;
       profile?: Profile;
     }) {
       if (user) {
@@ -106,9 +106,7 @@ export const {
       session,
       token,
     }: {
-      session: Session & {
-        user: User;
-      };
+      session: ExtendedSession;
       token: JWT;
     }) {
       if (session.user) {

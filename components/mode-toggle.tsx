@@ -21,7 +21,10 @@ export const ModeToggle = React.forwardRef<
       size="icon"
       className={cn('px-2', className)}
       aria-label="Toggle theme"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      onClick={() => {
+        console.log('clicked');
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+      }}
       {...props}
     >
       <SunIcon className="size-[1.2rem] text-neutral-800 dark:hidden dark:text-neutral-200" />

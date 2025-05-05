@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import { NextResponse } from 'next/server';
 
 export const authConfig = {
   pages: {
@@ -13,27 +14,40 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnChat = nextUrl.pathname.startsWith('/home');
-      const isOnLogin = nextUrl.pathname.startsWith('/');
+      const { pathname } = nextUrl;
 
-      if (isLoggedIn && isOnLogin && !isOnChat) {
-        return Response.redirect(new URL('/home', nextUrl as unknown as URL));
+      // Handle API routes first
+      if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth')) {
+        return isLoggedIn;
       }
 
-      if (isOnChat) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+      // Handle login page
+      if (pathname === '/') {
+        if (isLoggedIn) {
+          return Response.redirect(new URL('/home', nextUrl));
+        }
+
+        const { searchParams } = nextUrl;
+        const referralCode = searchParams.get('ref');
+        if (referralCode) {
+          const response = NextResponse.next();
+          response.cookies.set('referralCode', referralCode, {
+            httpOnly: false,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          });
+          return response;
+        }
+        return true;
       }
 
-      if (isOnLogin) {
-        return true; // Always allow access to register and login pages
+      // Handle chat/home pages
+      if (pathname.startsWith('/home')) {
+        return isLoggedIn;
       }
 
-      if (isLoggedIn) {
-        return Response.redirect(new URL('/home', nextUrl as unknown as URL));
-      }
-
-      return true;
+      return true; // Allow access to all other pages
     },
   },
 } satisfies NextAuthConfig;
