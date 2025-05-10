@@ -5,3 +5,8 @@ export const isTestEnvironment = Boolean(
     process.env.PLAYWRIGHT ||
     process.env.CI_PLAYWRIGHT,
 );
+
+/**
+ * Routes where tool bars are hidden
+ */
+export const HIDDEN_TOOL_BAR_ROUTES = ['/refresh'];

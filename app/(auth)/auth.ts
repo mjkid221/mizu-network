@@ -5,6 +5,8 @@ import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 import { validateJWT } from '@/lib/auth/validate';
 import { createUser, getUser } from '@/lib/db/queries';
+import { cookies } from 'next/headers';
+import { sec } from 'ms-extended';
 
 interface ExtendedUser extends User {
   sub?: string;
@@ -21,6 +23,10 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
+  session: {
+    strategy: 'jwt',
+    maxAge: sec('30 day'),
+  },
   providers: [
     Credentials({
       credentials: {
@@ -39,6 +45,14 @@ export const {
           if (!jwtPayload?.sub) {
             return null;
           }
+
+          // set cookie
+          (await cookies()).set('dynamic_authentication_token', token, {
+            httpOnly: false,
+            maxAge: jwtPayload.exp,
+            path: '/',
+          });
+
           return {
             sub: jwtPayload.sub,
             email: jwtPayload.email,

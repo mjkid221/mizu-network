@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { WavyBackground } from '@/components/ui/wavy-background';
 import { Button } from '@/components/ui/button';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { useTheme } from 'next-themes';
 
 export default function Page() {
   const { setShowAuthFlow } = useDynamicContext();
   const [isMounted, setIsMounted] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     setIsMounted(true);
@@ -22,8 +24,10 @@ export default function Page() {
 
   return (
     <WavyBackground
+      key={theme}
       className="max-w-4xl mx-auto pb-40 relative h-screen"
       colors={['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#22d3ee']}
+      backgroundFill={theme === 'dark' ? 'black' : 'white'}
     >
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative h-screen">
@@ -33,10 +37,10 @@ export default function Page() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h1 className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-300 bg-clip-text text-5xl font-bold text-transparent sm:text-6xl md:text-7xl">
+              <h1 className="bg-gradient-to-r from-gray-800 via-gray-600 to-gray-700 dark:from-gray-200 dark:via-gray-100 dark:to-gray-300 bg-clip-text text-5xl font-bold text-transparent sm:text-6xl md:text-7xl">
                 Mizu AI
               </h1>
-              <p className="mt-6 text-lg text-zinc-200 [text-shadow:_0_1px_2px_rgb(0_0_0_/_15%)] sm:text-xl">
+              <p className="mt-6 text-lg text-zinc-700 dark:text-zinc-200 [text-shadow:_0_1px_2px_rgb(0_0_0_/_15%)] sm:text-xl">
                 Your intelligent companion for the Sui blockchain
               </p>
               <div className="mt-8 flex items-center justify-center gap-4">
@@ -50,7 +54,7 @@ export default function Page() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 bg-black/10 hover:bg-black/20 text-white border-white/20 shadow-lg backdrop-blur-sm transition-all duration-200"
+                  className="h-12 bg-black/10 hover:bg-black/20 text-zinc-800 dark:text-white border-zinc-400 dark:border-white/20 shadow-lg backdrop-blur-sm transition-all duration-200"
                 >
                   Learn More
                 </Button>

@@ -79,15 +79,13 @@ export default async function RootLayout({
           <SessionProvider session={await auth()}>
             <ThemeProvider
               attribute="class"
-              defaultTheme="system"
+              defaultTheme="dark"
               enableSystem
               disableTransitionOnChange
             >
               <TopBar />
               <main className="flex flex-col">{children}</main>
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-                <InteractiveDock />
-              </div>
+              <InteractiveDock />
               <Toaster position="top-center" />
             </ThemeProvider>
           </SessionProvider>
