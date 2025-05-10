@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Dock, DockIcon } from './ui/dock';
 import { ModeToggle } from './mode-toggle';
+import { useIsHiddenToolbarRoute } from '@/hooks/use-is-hidden-toolbar-route';
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
@@ -97,67 +98,75 @@ export const InteractiveDock = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >((props, ref) => {
+  const isHiddenToolbarRoute = useIsHiddenToolbarRoute();
+
+  if (isHiddenToolbarRoute) {
+    return null;
+  }
+
   return (
-    <TooltipProvider>
-      <Dock direction="middle" {...props} ref={ref}>
-        {DATA.navbar.map((item) => (
-          <DockIcon key={item.label}>
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <TooltipProvider>
+        <Dock direction="middle" {...props} ref={ref}>
+          {DATA.navbar.map((item) => (
+            <DockIcon key={item.label}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    aria-label={item.label}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'icon' }),
+                      'size-12 rounded-full',
+                    )}
+                  >
+                    <item.icon className="size-4" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
+          ))}
+          <Separator orientation="vertical" className="h-full" />
+          {Object.entries(DATA.contact.social).map(([name, social]) => (
+            <DockIcon key={name}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={social.url}
+                    aria-label={social.name}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'icon' }),
+                      'size-12 rounded-full',
+                    )}
+                  >
+                    <social.icon className="size-4" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{name}</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
+          ))}
+          <Separator orientation="vertical" className="h-full py-2" />
+          <DockIcon>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
-                  href={item.href}
-                  aria-label={item.label}
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'icon' }),
-                    'size-12 rounded-full',
-                  )}
-                >
-                  <item.icon className="size-4" />
-                </Link>
+                <span>
+                  <ModeToggle className="rounded-full" />
+                </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{item.label}</p>
+                <p>Theme</p>
               </TooltipContent>
             </Tooltip>
           </DockIcon>
-        ))}
-        <Separator orientation="vertical" className="h-full" />
-        {Object.entries(DATA.contact.social).map(([name, social]) => (
-          <DockIcon key={name}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={social.url}
-                  aria-label={social.name}
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'icon' }),
-                    'size-12 rounded-full',
-                  )}
-                >
-                  <social.icon className="size-4" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{name}</p>
-              </TooltipContent>
-            </Tooltip>
-          </DockIcon>
-        ))}
-        <Separator orientation="vertical" className="h-full py-2" />
-        <DockIcon>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <ModeToggle className="rounded-full" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Theme</p>
-            </TooltipContent>
-          </Tooltip>
-        </DockIcon>
-      </Dock>
-    </TooltipProvider>
+        </Dock>
+      </TooltipProvider>
+    </div>
   );
 });
 

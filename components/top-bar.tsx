@@ -10,10 +10,17 @@ import {
 } from 'lucide-react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useSession } from 'next-auth/react';
+import { useIsHiddenToolbarRoute } from '@/hooks/use-is-hidden-toolbar-route';
 
 export function TopBar() {
   const { setShowAuthFlow, handleLogOut } = useDynamicContext();
   const { status } = useSession();
+
+  const isHiddenToolbarRoute = useIsHiddenToolbarRoute();
+
+  if (isHiddenToolbarRoute) {
+    return null;
+  }
 
   const isAuthenticated = status === 'authenticated';
 
